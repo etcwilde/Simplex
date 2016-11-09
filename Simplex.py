@@ -8,9 +8,11 @@ designed with the intention of showing the steps involved in the simplex
 method.
 """
 
-import numpy as np
 import argparse
 import csv
+import numpy as np
+import numpy.linalg
+import operator
 
 def basisVector(height, index):
     """Creates a 1xheight basis vector with the given index set to 1
@@ -48,7 +50,7 @@ class LinearSolver():
         self._originalBasic = self._B[:]
         self._originalNonBasic = self._N[:]
         self._zn = -np.copy(self._c)
-        self._zb = np.copy(self._b)
+        self._xb = np.copy(self._b)
 
         self._slackMat = np.identity(len(self._B))
         self._A = np.append(self._A, self._slackMat, axis=1)
@@ -117,13 +119,27 @@ class LinearSolver():
             return self._solution
 
         firstPivot = self.minCoeff()
-        print(firstPivot)
         if firstPivot[0] == -1:                                 # Step 1
             print("Done optimizing", self._zn)
             return
-        enteringIndex = firstPivot[0]
+        enteringIndex, _ = firstPivot
+        elementary = np.matrix(basisVector(self.getNonBasicMatrix().shape[1],
+            enteringIndex)).transpose()
+        binv = np.linalg.inv(self.getBasicMatrix())
+        deltaxb = binv * self.getNonBasicMatrix() * elementary
 
-        pass
+        numerators = [num.item(0) for num in np.nditer(deltaxb)]
+        denominators = [num.item(0) if num.item(0) is not 0 else None for num in np.nditer(self._xb)]
+
+        nums = [numerators[idx] / val for idx, val in enumerate(denominators) if val is not None]
+        vectorIndex , _ = max(enumerate(nums), key=operator.itemgetter(1))
+        leavingIndex = self._B[vectorIndex]
+        deltazn = - (binv * self.getNonBasicMatrix()).transpose() * \
+                np.matrix(basisVector(self.getNonBasicMatrix().shape[0],
+                    vectorIndex)).transpose()
+
+        s = self._zn.item(enteringIndex) / deltazn.item(enteringIndex)
+        print(s)
 
 
 def checkProgram(program_dictionary):
