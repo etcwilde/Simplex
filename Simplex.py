@@ -115,57 +115,59 @@ class LinearSolver():
         :returns: Solution to linear program
 
         """
-        # if self._solution is not None:                          # return cached
-        #     return self._solution
 
+        # Step 1 / 2
         firstPivot = self.minCoeff()
-        if firstPivot[0] == -1:                                 # Step 1 / 2
+        if firstPivot[0] == -1:
             print("Done optimizing", self._zn)
             return
-        enteringIndex, _ = firstPivot
+
+        enteringIndex, value = firstPivot
+        j = self._N[enteringIndex]
+
+        # Step 3
         elementary = np.matrix(basisVector(self.getNonBasicMatrix().shape[1],
             enteringIndex)).transpose()
         binv = np.linalg.inv(self.getBasicMatrix())
         deltaxb = binv * self.getNonBasicMatrix() * elementary
 
+        # Step 4
         numerators = [num.item(0) for num in np.nditer(deltaxb)]
         denominators = [num.item(0) if num.item(0) is not 0 else None for num in np.nditer(self._xb)]
 
         nums = [numerators[idx] / val for idx, val in enumerate(denominators) if val is not None]
         vectorIndex, t = max(enumerate(nums), key=operator.itemgetter(1))
         t = 1 / t
+
+        # Step 5
         leavingIndex = self._B[vectorIndex]
+
+        # Step 6
         deltazn = - (binv * self.getNonBasicMatrix()).transpose() * \
                 np.matrix(basisVector(self.getNonBasicMatrix().shape[0],
                     vectorIndex)).transpose()
+        # Step 7
         s = self._zn.item(enteringIndex) / deltazn.item(enteringIndex)
 
-
-        print("t: {}, s: {}".format(t, s))
-        print(self.latexPrint(self._xb), "-", t, "*", self.latexPrint(deltaxb), "=", self.latexPrint(self._xb - t * deltaxb) )
-        print(self.latexPrint(self._zn.transpose()), "-", s, "*", self.latexPrint(deltazn), "=", self.latexPrint(self._zn.transpose() - s * deltazn))
-
+        # Step 8
         self._xb = self._xb - t * deltaxb
         self._zn = self._zn.transpose() - s * deltazn
 
         leavingIndexIndex = self._B.index(leavingIndex)
-        enteringIndexIndex = self._N.index(enteringIndex)
-        self._B[leavingIndexIndex] = enteringIndex
+        enteringIndexIndex = self._N.index(j)
+
+
+        self._B[leavingIndexIndex] = j
         self._N[enteringIndexIndex] = leavingIndex
 
 
-        self._xb.put(enteringIndexIndex, t)
-        self._zn.put(leavingIndexIndex, s)
+        self._xb.put(leavingIndexIndex, t)
+        self._zn.put(enteringIndexIndex, s)
         self._zn = self._zn.transpose()
 
         print("Outputs")
         print(self.latexPrint(self._xb))
         print(self.latexPrint(self._zn))
-
-
-        # print(self.getBasicMatrix())
-        # print(self.getNonBasicMatrix())
-
 
 
 def checkProgram(program_dictionary):
@@ -242,7 +244,8 @@ def main():
     lp.solve()
     print()
     lp.solve()
-
+    print()
+    lp.solve()
 
 
 if __name__ == "__main__":
