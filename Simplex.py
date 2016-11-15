@@ -13,220 +13,7 @@ import csv
 import numpy as np
 import numpy.linalg
 import operator
-
-def printSingleLine(lst):
-    """Puts strings from list into a tabular
-
-    :lst: The list of strings to be put into the tabular
-    :returns: stirng of tabular environment
-    """
-    start = r"\begin{tabular}{" + "c" * len(lst) + r"}"
-    inner = " & ".join(lst)
-    end = r"\end{tabular}"
-    return start + inner + end
-
-
-def basisVector(height, index):
-    """Creates a 1xheight basis vector with the given index set to 1
-
-    :height: Dimensions of the vector
-    :index: Which dimension is the vector facing
-    :returns: a basis vector in that direction
-    """
-    retval = np.zeros(height)
-    retval[index] = 1
-    return retval
-
-
-class LinearSolver():
-
-    """Solves linear programs"""
-
-    def __init__(self, c, A, b):
-        """
-        Linear program solver
-
-        :c: maximization function coefficients
-        :A: Constraint matrix
-        :b: Constraint coefficients
-
-        """
-        self._c = c
-        self._A = A
-        self._b = b
-
-        self._solution = None
-
-        self._N = [ i for i in range(self._A.shape[1]) ]
-        self._B = [ i + len(self._N) for i in range(self._A.shape[0]) ]
-        self._originalBasic = self._B[:]
-        self._originalNonBasic = self._N[:]
-        self._zn = -np.copy(self._c)
-        self._xb = np.copy(self._b)
-
-        self._slackMat = np.identity(len(self._B))
-        self._A = np.append(self._A, self._slackMat, axis=1)
-
-
-
-    def getBasicMatrix(self):
-        """ Generate the basic matrix of the dictionary
-
-        :returns: The basic matrix
-        """
-        return np.concatenate([self._A[:, i] for i in self._B], axis=1)
-
-    def getNonBasicMatrix(self):
-        """Generates the non-basic matrix
-
-        :returns: The nonbasic matrix
-
-        """
-        return np.concatenate([self._A[:, i] for i in self._N], axis=1)
-
-    @staticmethod
-    def minCoeff(zCoeff):
-        """Grabs most negative coefficient
-
-        -- If index is -1, then we are done optimizing
-
-        :zCoeff: The coefficients for the objective function
-        :returns: index and most negative coefficient
-        """
-        retVal = (-1, 0)
-        for idx, i in enumerate(np.nditer(zCoeff)):
-            if i < retVal[1]:
-                retVal = (idx, i)
-        return retVal
-
-    @staticmethod
-    def latexPrint(matrix):
-        """Prints the matrix in LaTeX form
-
-        :matrix: numpy matrix
-        :returns: String of the matrix
-
-        """
-        dims = matrix.shape
-        # print(dims)  # dims[0]: height, dims[1]: width
-        opening = r"\left[\begin{array}{" + "c" * dims[1] + r"}"
-        closing = r"\end{array}\right]"
-        string = ""
-        for idx, x in enumerate(np.nditer(matrix)):
-            string += str(float(x))
-            if idx % dims[1] == dims[1] - 1:
-                string += r"\\ "
-            else:
-                string += " & "
-        return opening + string + closing
-
-    def printLaTeXIndecies(self):
-        """prints the basic and nonbasic indices
-        :returns: the string of LaTeX that is the basic and non-basic indices
-
-        """
-        return printSingleLine([
-                r"$B$: ${" +
-                r"\left\{\begin{array}{" + "c" * len(self._B) + r"}" +
-                " & ".join([str(x + 1) for x in self._B]) +
-                r"\end{array}\right\}" +
-                r"}$",
-                r"$N$: ${" +
-                r"\left\{\begin{array}{" + "c" * len(self._N) + r"}" +
-                " & ".join([str(x + 1) for x in self._N]) +
-                r"\end{array}\right\}" +
-                r"}$"
-                ])
-
-    def printLaTeXVaribles(self):
-        return printSingleLine([
-            r"$x_B$: $" + self.latexPrint(self._xb) + "$",
-            r"$z_N$: $" + self.latexPrint(self._zn.transpose()) + "$"
-            ])
-
-
-    def printLaTeXBaseMatrices(self):
-        """ prints the basic and nonbasic matrices
-        :returns: the string of LaTeX that is the basic and non-basic matrices
-        """
-        return printSingleLine(["$B$: $" + self.latexPrint(self.getBasicMatrix()) + "$",
-            "$N$: $" + self.latexPrint(self.getNonBasicMatrix()) + "$"])
-
-
-
-    def __str__(self):
-        return str(self._N) + str(self._B)
-
-    def solve(self):
-        """Solves the linear program
-
-        :returns: Solution to linear program as a dictionary
-            xb: a list of tuples with the i for x_i and the value of x_i
-            zn: a list of tuples with the j for z_j and the value of z_j
-        """
-
-        while True:
-            # Step 1 / 2
-            firstPivot = self.minCoeff(self._zn)
-            if firstPivot[0] == -1:
-                return {'xb':
-                        list(
-                            zip(self._B, [x for r in self._xb.tolist() for x in r])
-                            ),
-                        'zn':
-                        list(
-                            zip(self._N, [x for r in self._zn.tolist() for x in r])
-                            )}
-
-            enteringIndex, value = firstPivot
-            j = self._N[enteringIndex]
-
-            # Step 3
-            elementary = np.matrix(basisVector(self.getNonBasicMatrix().shape[1],
-                enteringIndex)).transpose()
-            binv = np.linalg.inv(self.getBasicMatrix())
-            deltaxb = binv * self.getNonBasicMatrix() * elementary
-
-            # Step 4
-            numerators = [num.item(0) for num in np.nditer(deltaxb)]
-            denominators = [num.item(0) if num.item(0) is not 0 else None for num in np.nditer(self._xb)]
-
-            nums = [numerators[idx] / val for idx, val in enumerate(denominators) if val is not None]
-            vectorIndex, t = max(enumerate(nums), key=operator.itemgetter(1))
-            t = 1 / t
-
-            # Step 5
-            leavingIndex = self._B[vectorIndex]
-
-            # Step 6
-            elementary = np.matrix(basisVector(self.getNonBasicMatrix().shape[0],
-                vectorIndex)).transpose()
-            binvNT = (binv * self.getNonBasicMatrix()).transpose()
-            deltazn = -binvNT * elementary
-
-            # Step 7
-            s = self._zn.item(enteringIndex) / deltazn.item(enteringIndex)
-
-            # Step 8
-
-            self._xb = self._xb - t * deltaxb
-            self._zn = self._zn.transpose() - s * deltazn
-
-
-            originalXb = self.latexPrint(self._xb)
-            originalzn = self.latexPrint(self._zn)
-
-            leavingIndexIndex = self._B.index(leavingIndex)
-            enteringIndexIndex = self._N.index(j)
-
-
-            self._B[leavingIndexIndex] = j
-            self._N[enteringIndexIndex] = leavingIndex
-
-            self._xb.put(leavingIndexIndex, t)
-            self._zn.put(enteringIndexIndex, s)
-            self._zn = self._zn.transpose()
-
+import LaTeX
 
 def checkProgram(program_dictionary):
     """checkProgram
@@ -278,6 +65,183 @@ def processInput(filenames):
             csv_contents[csv_map[f_idx]] = \
                     csv_actions[f_idx]([row for row in csv_reader])
     return csv_contents
+
+def basisVector(height, index):
+    """Creates a 1xheight basis vector with the given index set to 1
+
+    :height: Dimensions of the vector
+    :index: Which dimension is the vector facing
+    :returns: a basis vector in that direction
+    """
+    retval = np.zeros(height)
+    retval[index] = 1
+    return retval
+
+def minCoeff(zCoeff):
+    """Grabs most negative coefficient
+
+    -- If index is -1, then we are done optimizing
+
+    :zCoeff: The coefficients for the objective function
+    :returns: index and most negative coefficient
+    """
+    retVal = (-1, 0)
+    for idx, i in enumerate(np.nditer(zCoeff)):
+        if i < retVal[1]:
+            retVal = (idx, i)
+    return retVal
+
+
+class LinearSolver():
+
+    """Solves linear programs"""
+
+    def __init__(self, c, A, b):
+        """
+        Linear program solver
+
+        :c: maximization function coefficients
+        :A: Constraint matrix
+        :b: Constraint coefficients
+
+        """
+        self._c = c
+        self._A = A
+        self._b = b
+
+        self._solution = None
+
+        self._N = [ i for i in range(self._A.shape[1]) ]
+        self._B = [ i + len(self._N) for i in range(self._A.shape[0]) ]
+        self._originalBasic = self._B[:]
+        self._originalNonBasic = self._N[:]
+        self._zn = -np.copy(self._c)
+        self._xb = np.copy(self._b)
+
+        self._slackMat = np.identity(len(self._B))
+        self._A = np.append(self._A, self._slackMat, axis=1)
+
+    def getBasicMatrix(self):
+        """ Generate the basic matrix of the dictionary
+
+        :returns: The basic matrix
+        """
+        return np.concatenate([self._A[:, i] for i in self._B], axis=1)
+
+    def getNonBasicMatrix(self):
+        """Generates the non-basic matrix
+
+        :returns: The nonbasic matrix
+
+        """
+        return np.concatenate([self._A[:, i] for i in self._N], axis=1)
+
+    def printLaTeXIndecies(self):
+        """prints the basic and nonbasic indices
+        :returns: the string of LaTeX that is the basic and non-basic indices
+
+        """
+        return printSingleLine([
+                r"$B$: ${" +
+                r"\left\{\begin{array}{" + "c" * len(self._B) + r"}" +
+                " & ".join([str(x + 1) for x in self._B]) +
+                r"\end{array}\right\}" +
+                r"}$",
+                r"$N$: ${" +
+                r"\left\{\begin{array}{" + "c" * len(self._N) + r"}" +
+                " & ".join([str(x + 1) for x in self._N]) +
+                r"\end{array}\right\}" +
+                r"}$"
+                ])
+
+    def printLaTeXVaribles(self):
+        return printSingleLine([
+            r"$x_B$: $" + LaTeX.LaTeXMatrixToArray(self._xb) + "$",
+            r"$z_N$: $" + LaTeX.LaTeXMatrixToArray(self._zn.transpose()) + "$"
+            ])
+
+    def printLaTeXBaseMatrices(self):
+        """ prints the basic and nonbasic matrices
+        :returns: the string of LaTeX that is the basic and non-basic matrices
+        """
+        return printSingleLine(["$B$: $" + LaTeX.LaTeXMatrixToArray(self.getBasicMatrix()) + "$",
+            "$N$: $" + LaTeX.LaTeXMatrixToArray(self.getNonBasicMatrix()) + "$"])
+
+    def __str__(self):
+        return str(self._N) + str(self._B)
+
+    def solve(self):
+        """Solves the linear program
+
+        :returns: Solution to linear program as a dictionary
+            xb: a list of tuples with the i for x_i and the value of x_i
+            zn: a list of tuples with the j for z_j and the value of z_j
+        """
+
+        while True:
+            # Step 1 / 2
+            firstPivot = minCoeff(self._zn)
+            if firstPivot[0] == -1:
+                return {'xb':
+                        list(
+                            zip(self._B, [x for r in self._xb.tolist() for x in r])
+                            ),
+                        'zn':
+                        list(
+                            zip(self._N, [x for r in self._zn.tolist() for x in r])
+                            )}
+
+            enteringIndex, value = firstPivot
+            j = self._N[enteringIndex]
+
+            # Step 3
+            elementary = np.matrix(basisVector(self.getNonBasicMatrix().shape[1],
+                enteringIndex)).transpose()
+            binv = np.linalg.inv(self.getBasicMatrix())
+            deltaxb = binv * self.getNonBasicMatrix() * elementary
+
+            # Step 4
+            numerators = [num.item(0) for num in np.nditer(deltaxb)]
+            denominators = [num.item(0) if num.item(0) is not 0 else None for num in np.nditer(self._xb)]
+
+            nums = [numerators[idx] / val for idx, val in enumerate(denominators) if val is not None]
+            vectorIndex, t = max(enumerate(nums), key=operator.itemgetter(1))
+            t = 1 / t
+
+            # Step 5
+            leavingIndex = self._B[vectorIndex]
+
+            # Step 6
+            elementary = np.matrix(basisVector(self.getNonBasicMatrix().shape[0],
+                vectorIndex)).transpose()
+            binvNT = (binv * self.getNonBasicMatrix()).transpose()
+            deltazn = -binvNT * elementary
+
+            # Step 7
+            s = self._zn.item(enteringIndex) / deltazn.item(enteringIndex)
+
+            # Step 8
+
+            self._xb = self._xb - t * deltaxb
+            self._zn = self._zn.transpose() - s * deltazn
+
+
+            originalXb = LaTeX.LaTeXMatrixToArray(self._xb)
+            originalzn = LaTeX.LaTeXMatrixToArray(self._zn)
+
+            print(LaTeX.LaTeXCenter(["$" + originalXb + "$", "$" + originalzn + "$"]))
+
+            leavingIndexIndex = self._B.index(leavingIndex)
+            enteringIndexIndex = self._N.index(j)
+
+
+            self._B[leavingIndexIndex] = j
+            self._N[enteringIndexIndex] = leavingIndex
+
+            self._xb.put(leavingIndexIndex, t)
+            self._zn.put(enteringIndexIndex, s)
+            self._zn = self._zn.transpose()
+
 
 def main():
     """
