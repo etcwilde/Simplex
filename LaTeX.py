@@ -1,5 +1,6 @@
 #
 # Utilities to help when working with LaTeX in Python
+# Evan Wilde
 #
 
 import numpy as np
