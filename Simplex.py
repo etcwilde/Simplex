@@ -68,6 +68,7 @@ class LinearSolver():
         self._A = np.append(self._A, self._slackMat, axis=1)
 
 
+
     def getBasicMatrix(self):
         """ Generate the basic matrix of the dictionary
 
@@ -159,52 +160,32 @@ class LinearSolver():
     def solve(self):
         """Solves the linear program
 
-        :returns: Solution to linear program
-
+        :returns: Solution to linear program as a dictionary
+            xb: a list of tuples with the i for x_i and the value of x_i
+            zn: a list of tuples with the j for z_j and the value of z_j
         """
 
-        iteration = 0
         while True:
             # Step 1 / 2
-            print(r"\textbf{Iteration " + str(iteration + 1) + r": }" + "\n")
-
-            print(r"\begin{center}")
-            print(self.printLaTeXIndecies() + r"\\" + '\n')
-            print(self.printLaTeXBaseMatrices() + r"\\" + '\n')
-            print(self.printLaTeXVaribles() + r"\\" + '\n')
-            print(r"\end{center}")
-
-
-            print(r"\textit{Step 1:}")
-
             firstPivot = self.minCoeff(self._zn)
             if firstPivot[0] == -1:
-                print("Coefficients of $z_n$ are all positive")
-                return
-                # print("Done optimizing", list(zip(self._N, np.nditer((self._zn)))))
+                return {'xb':
+                        list(
+                            zip(self._B, [x for r in self._xb.tolist() for x in r])
+                            ),
+                        'zn':
+                        list(
+                            zip(self._N, [x for r in self._zn.tolist() for x in r])
+                            )}
 
-            print("Negative Coefficient(s) in $z_n$")
             enteringIndex, value = firstPivot
             j = self._N[enteringIndex]
 
-            print(r"\\\textit{Step 2:}\\")
-            print(r"\begin{center}")
-            print("$j$ = {}".format(j + 1))
-            print(r"\end{center}")
-
             # Step 3
-
             elementary = np.matrix(basisVector(self.getNonBasicMatrix().shape[1],
                 enteringIndex)).transpose()
             binv = np.linalg.inv(self.getBasicMatrix())
             deltaxb = binv * self.getNonBasicMatrix() * elementary
-
-            print(r"\textit{Step 3:}\\")
-            print(r"\begin{center}$\Delta x_B$ = $" + self.latexPrint(binv) +
-                    self.latexPrint(self.getNonBasicMatrix()) +
-                    self.latexPrint(elementary) + " = " +
-                    self.latexPrint(deltaxb) + r"$\end{center}")
-
 
             # Step 4
             numerators = [num.item(0) for num in np.nditer(deltaxb)]
@@ -214,34 +195,17 @@ class LinearSolver():
             vectorIndex, t = max(enumerate(nums), key=operator.itemgetter(1))
             t = 1 / t
 
-            print(r"\textit{Step 4:}\\")
-            print(r"\begin{center}")
-            print("$t$ = {}".format(t))
-            print(r"\end{center}")
-
-
             # Step 5
             leavingIndex = self._B[vectorIndex]
-
-            print(r"\textit{Step 5:}\\")
-            print(r"\begin{center}")
-            print("$i$ = {}".format(leavingIndex + 1))
-            print(r"\end{center}")
-
 
             # Step 6
             elementary = np.matrix(basisVector(self.getNonBasicMatrix().shape[0],
                 vectorIndex)).transpose()
             binvNT = (binv * self.getNonBasicMatrix()).transpose()
             deltazn = -binvNT * elementary
-            print(r"\textit{Step 6:}\\")
-            print(r"\begin{center}$\Delta z_N = " + self.latexPrint(deltazn) +
-                    r"$\end{center}")
 
             # Step 7
             s = self._zn.item(enteringIndex) / deltazn.item(enteringIndex)
-            print(r"\textit{Step 7:}\\")
-            print(r"\begin{center}$s = " + str(s) + r"$\end{center}")
 
             # Step 8
 
@@ -259,31 +223,9 @@ class LinearSolver():
             self._B[leavingIndexIndex] = j
             self._N[enteringIndexIndex] = leavingIndex
 
-
-
             self._xb.put(leavingIndexIndex, t)
             self._zn.put(enteringIndexIndex, s)
             self._zn = self._zn.transpose()
-
-            print(r"\textit{Step 8:}\\")
-            print(r"\begin{center}")
-
-            print(
-                    printSingleLine([
-                        "$x_{}^* = {}$".format(leavingIndexIndex + 1, t),
-                        "$x_B^* = " + originalXb + "$"
-                        ]))
-            print(r"\\")
-            print(
-                    printSingleLine([
-                        "$z_{}^* = {}$".format(enteringIndexIndex + 1, s),
-                        "$z_N^* = " + originalzn + "$"
-                        ]))
-
-            print(r"\end{center}")
-
-            iteration += 1
-
 
 
 def checkProgram(program_dictionary):
@@ -355,8 +297,11 @@ def main():
         return
     # print(pDic)
     lp = LinearSolver(np.matrix(pDic['c']), np.matrix(pDic['A']), np.matrix(pDic['b']))
-    lp.solve()
+    print(lp.solve())
     print()
+
+
+
 
 
 if __name__ == "__main__":
