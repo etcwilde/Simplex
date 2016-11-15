@@ -107,11 +107,259 @@ These two will behave equivalently:
 
 \subsection{Output}
 
-%%TODO: Get the output
+\textbf{Iteration 1: }
+
+\begin{center}
+\begin{tabular}{cc}$B$: ${\left\{\begin{array}{ccc}3 & 4 & 5\end{array}\right\}}$ & $N$: ${\left\{\begin{array}{cc}1 & 2\end{array}\right\}}$\end{tabular}\\
+
+\begin{tabular}{cc}$B$: $\left[\begin{array}{ccc}1.0 & 0.0 & 0.0\\ 0.0 & 1.0 & 0.0\\ 0.0 & 0.0 & 1.0\\ \end{array}\right]$ & $N$: $\left[\begin{array}{cc}1.0 & -1.0\\ 2.0 & -1.0\\ 0.0 & 1.0\\ \end{array}\right]$\end{tabular}\\
+
+\begin{tabular}{cc}$x_B$: $\left[\begin{array}{c}1.0\\ 3.0\\ 5.0\\ \end{array}\right]$ & $z_N$: $\left[\begin{array}{c}-4.0\\ -3.0\\ \end{array}\right]$\end{tabular}\\
+
+\end{center}
+\textit{Step 1:}
+Negative Coefficient(s) in $z_n$
+\\\textit{Step 2:}\\
+\begin{center}
+$j$ = 1
+\end{center}
+\textit{Step 3:}\\
+\begin{center}$\Delta x_B$ = $\left[\begin{array}{ccc}1.0 & 0.0 & 0.0\\ 0.0 & 1.0 & 0.0\\ 0.0 & 0.0 & 1.0\\ \end{array}\right]\left[\begin{array}{cc}1.0 & -1.0\\ 2.0 & -1.0\\ 0.0 & 1.0\\ \end{array}\right]\left[\begin{array}{c}1.0\\ 0.0\\ \end{array}\right] = \left[\begin{array}{c}1.0\\ 2.0\\ 0.0\\ \end{array}\right]$\end{center}
+\textit{Step 4:}\\
+\begin{center}
+$t$ = 1.0
+\end{center}
+\textit{Step 5:}\\
+\begin{center}
+$i$ = 3
+\end{center}
+\textit{Step 6:}\\
+\begin{center}$\Delta z_N = \left[\begin{array}{c}-1.0\\ 1.0\\ \end{array}\right]$\end{center}
+\textit{Step 7:}\\
+\begin{center}$s = 4.0$\end{center}
+\textit{Step 8:}\\
+\begin{center}
+\begin{tabular}{cc}$x_1^* = 1.0$ & $x_B^* = \left[\begin{array}{c}0.0\\ 1.0\\ 5.0\\ \end{array}\right]$\end{tabular}
+\\
+\begin{tabular}{cc}$z_1^* = 4.0$ & $z_N^* = \left[\begin{array}{c}0.0\\ -7.0\\ \end{array}\right]$\end{tabular}
+\end{center}
+\textbf{Iteration 2: }
+
+\begin{center}
+\begin{tabular}{cc}$B$: ${\left\{\begin{array}{ccc}1 & 4 & 5\end{array}\right\}}$ & $N$: ${\left\{\begin{array}{cc}3 & 2\end{array}\right\}}$\end{tabular}\\
+
+\begin{tabular}{cc}$B$: $\left[\begin{array}{ccc}1.0 & 0.0 & 0.0\\ 2.0 & 1.0 & 0.0\\ 0.0 & 0.0 & 1.0\\ \end{array}\right]$ & $N$: $\left[\begin{array}{cc}1.0 & -1.0\\ 0.0 & -1.0\\ 0.0 & 1.0\\ \end{array}\right]$\end{tabular}\\
+
+\begin{tabular}{cc}$x_B$: $\left[\begin{array}{c}1.0\\ 1.0\\ 5.0\\ \end{array}\right]$ & $z_N$: $\left[\begin{array}{c}4.0\\ -7.0\\ \end{array}\right]$\end{tabular}\\
+
+\end{center}
+\textit{Step 1:}
+Negative Coefficient(s) in $z_n$
+\\\textit{Step 2:}\\
+\begin{center}
+$j$ = 2
+\end{center}
+\textit{Step 3:}\\
+\begin{center}$\Delta x_B$ = $\left[\begin{array}{ccc}1.0 & 0.0 & 0.0\\ -2.0 & 1.0 & 0.0\\ 0.0 & 0.0 & 1.0\\ \end{array}\right]\left[\begin{array}{cc}1.0 & -1.0\\ 0.0 & -1.0\\ 0.0 & 1.0\\ \end{array}\right]\left[\begin{array}{c}0.0\\ 1.0\\ \end{array}\right] = \left[\begin{array}{c}-1.0\\ 1.0\\ 1.0\\ \end{array}\right]$\end{center}
+\textit{Step 4:}\\
+\begin{center}
+$t$ = 1.0
+\end{center}
+\textit{Step 5:}\\
+\begin{center}
+$i$ = 4
+\end{center}
+\textit{Step 6:}\\
+\begin{center}$\Delta z_N = \left[\begin{array}{c}2.0\\ -1.0\\ \end{array}\right]$\end{center}
+\textit{Step 7:}\\
+\begin{center}$s = 7.0$\end{center}
+\textit{Step 8:}\\
+\begin{center}
+\begin{tabular}{cc}$x_2^* = 1.0$ & $x_B^* = \left[\begin{array}{c}2.0\\ 0.0\\ 4.0\\ \end{array}\right]$\end{tabular}
+\\
+\begin{tabular}{cc}$z_2^* = 7.0$ & $z_N^* = \left[\begin{array}{c}-10.0\\ 0.0\\ \end{array}\right]$\end{tabular}
+\end{center}
+\textbf{Iteration 3: }
+
+\begin{center}
+\begin{tabular}{cc}$B$: ${\left\{\begin{array}{ccc}1 & 2 & 5\end{array}\right\}}$ & $N$: ${\left\{\begin{array}{cc}3 & 4\end{array}\right\}}$\end{tabular}\\
+
+\begin{tabular}{cc}$B$: $\left[\begin{array}{ccc}1.0 & -1.0 & 0.0\\ 2.0 & -1.0 & 0.0\\ 0.0 & 1.0 & 1.0\\ \end{array}\right]$ & $N$: $\left[\begin{array}{cc}1.0 & 0.0\\ 0.0 & 1.0\\ 0.0 & 0.0\\ \end{array}\right]$\end{tabular}\\
+
+\begin{tabular}{cc}$x_B$: $\left[\begin{array}{c}2.0\\ 1.0\\ 4.0\\ \end{array}\right]$ & $z_N$: $\left[\begin{array}{c}-10.0\\ 7.0\\ \end{array}\right]$\end{tabular}\\
+
+\end{center}
+\textit{Step 1:}
+Negative Coefficient(s) in $z_n$
+\\\textit{Step 2:}\\
+\begin{center}
+$j$ = 3
+\end{center}
+\textit{Step 3:}\\
+\begin{center}$\Delta x_B$ = $\left[\begin{array}{ccc}-1.0 & 1.0 & 0.0\\ -2.0 & 1.0 & 0.0\\ 2.0 & -1.0 & 1.0\\ \end{array}\right]\left[\begin{array}{cc}1.0 & 0.0\\ 0.0 & 1.0\\ 0.0 & 0.0\\ \end{array}\right]\left[\begin{array}{c}1.0\\ 0.0\\ \end{array}\right] = \left[\begin{array}{c}-1.0\\ -2.0\\ 2.0\\ \end{array}\right]$\end{center}
+\textit{Step 4:}\\
+\begin{center}
+$t$ = 2.0
+\end{center}
+\textit{Step 5:}\\
+\begin{center}
+$i$ = 5
+\end{center}
+\textit{Step 6:}\\
+\begin{center}$\Delta z_N = \left[\begin{array}{c}-2.0\\ 1.0\\ \end{array}\right]$\end{center}
+\textit{Step 7:}\\
+\begin{center}$s = 5.0$\end{center}
+\textit{Step 8:}\\
+\begin{center}
+\begin{tabular}{cc}$x_3^* = 2.0$ & $x_B^* = \left[\begin{array}{c}4.0\\ 5.0\\ 0.0\\ \end{array}\right]$\end{tabular}
+\\
+\begin{tabular}{cc}$z_1^* = 5.0$ & $z_N^* = \left[\begin{array}{c}0.0\\ 2.0\\ \end{array}\right]$\end{tabular}
+\end{center}
+\textbf{Iteration 4: }
+
+\begin{center}
+\begin{tabular}{cc}$B$: ${\left\{\begin{array}{ccc}1 & 2 & 3\end{array}\right\}}$ & $N$: ${\left\{\begin{array}{cc}5 & 4\end{array}\right\}}$\end{tabular}\\
+
+\begin{tabular}{cc}$B$: $\left[\begin{array}{ccc}1.0 & -1.0 & 1.0\\ 2.0 & -1.0 & 0.0\\ 0.0 & 1.0 & 0.0\\ \end{array}\right]$ & $N$: $\left[\begin{array}{cc}0.0 & 0.0\\ 0.0 & 1.0\\ 1.0 & 0.0\\ \end{array}\right]$\end{tabular}\\
+
+\begin{tabular}{cc}$x_B$: $\left[\begin{array}{c}4.0\\ 5.0\\ 2.0\\ \end{array}\right]$ & $z_N$: $\left[\begin{array}{c}5.0\\ 2.0\\ \end{array}\right]$\end{tabular}\\
+
+\end{center}
+\textit{Step 1:}
+Coefficients of $z_n$ are all positive
+
 
 \subsection{Code}
 
 \begin{lstlisting}
+
+    def solve(self):
+        """Solves the linear program
+
+        :returns: Solution to linear program
+
+        """
+
+        iteration = 0
+        while True:
+            # Step 1 / 2
+            print(r"\textbf{Iteration " + str(iteration + 1) + r": }" + "\n")
+
+            print(r"\begin{center}")
+            print(self.printLaTeXIndecies() + r"\\" + '\n')
+            print(self.printLaTeXBaseMatrices() + r"\\" + '\n')
+            print(self.printLaTeXVaribles() + r"\\" + '\n')
+            print(r"\end{center}")
+
+
+            print(r"\textit{Step 1:}")
+
+            firstPivot = self.minCoeff(self._zn)
+            if firstPivot[0] == -1:
+                print("Coefficients of $z_n$ are all positive")
+                return
+                # print("Done optimizing", list(zip(self._N, np.nditer((self._zn)))))
+
+            print("Negative Coefficient(s) in $z_n$")
+            enteringIndex, value = firstPivot
+            j = self._N[enteringIndex]
+
+            print(r"\\\textit{Step 2:}\\")
+            print(r"\begin{center}")
+            print("$j$ = {}".format(j + 1))
+            print(r"\end{center}")
+
+            # Step 3
+
+            elementary = np.matrix(basisVector(self.getNonBasicMatrix().shape[1],
+                enteringIndex)).transpose()
+            binv = np.linalg.inv(self.getBasicMatrix())
+            deltaxb = binv * self.getNonBasicMatrix() * elementary
+
+            print(r"\textit{Step 3:}\\")
+            print(r"\begin{center}$\Delta x_B$ = $" + self.latexPrint(binv) +
+                    self.latexPrint(self.getNonBasicMatrix()) +
+                    self.latexPrint(elementary) + " = " +
+                    self.latexPrint(deltaxb) + r"$\end{center}")
+
+
+            # Step 4
+            numerators = [num.item(0) for num in np.nditer(deltaxb)]
+            denominators = [num.item(0) if num.item(0) is not 0 else None for num in np.nditer(self._xb)]
+
+            nums = [numerators[idx] / val for idx, val in enumerate(denominators) if val is not None]
+            vectorIndex, t = max(enumerate(nums), key=operator.itemgetter(1))
+            t = 1 / t
+
+            print(r"\textit{Step 4:}\\")
+            print(r"\begin{center}")
+            print("$t$ = {}".format(t))
+            print(r"\end{center}")
+
+
+            # Step 5
+            leavingIndex = self._B[vectorIndex]
+
+            print(r"\textit{Step 5:}\\")
+            print(r"\begin{center}")
+            print("$i$ = {}".format(leavingIndex + 1))
+            print(r"\end{center}")
+
+
+            # Step 6
+            elementary = np.matrix(basisVector(self.getNonBasicMatrix().shape[0],
+                vectorIndex)).transpose()
+            binvNT = (binv * self.getNonBasicMatrix()).transpose()
+            deltazn = -binvNT * elementary
+            print(r"\textit{Step 6:}\\")
+            print(r"\begin{center}$\Delta z_N = " + self.latexPrint(deltazn) +
+                    r"$\end{center}")
+
+            # Step 7
+            s = self._zn.item(enteringIndex) / deltazn.item(enteringIndex)
+            print(r"\textit{Step 7:}\\")
+            print(r"\begin{center}$s = " + str(s) + r"$\end{center}")
+
+            # Step 8
+
+            self._xb = self._xb - t * deltaxb
+            self._zn = self._zn.transpose() - s * deltazn
+
+
+            originalXb = self.latexPrint(self._xb)
+            originalzn = self.latexPrint(self._zn)
+
+            leavingIndexIndex = self._B.index(leavingIndex)
+            enteringIndexIndex = self._N.index(j)
+
+
+            self._B[leavingIndexIndex] = j
+            self._N[enteringIndexIndex] = leavingIndex
+
+
+
+            self._xb.put(leavingIndexIndex, t)
+            self._zn.put(enteringIndexIndex, s)
+            self._zn = self._zn.transpose()
+
+            print(r"\textit{Step 8:}\\")
+            print(r"\begin{center}")
+
+            print(
+                    printSingleLine([
+                        "$x_{}^* = {}$".format(leavingIndexIndex + 1, t),
+                        "$x_B^* = " + originalXb + "$"
+                        ]))
+            print(r"\\")
+            print(
+                    printSingleLine([
+                        "$z_{}^* = {}$".format(enteringIndexIndex + 1, s),
+                        "$z_N^* = " + originalzn + "$"
+                        ]))
+
+            print(r"\end{center}")
+
+            iteration += 1
 
 \end{lstlisting}
 
