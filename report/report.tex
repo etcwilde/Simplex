@@ -233,134 +233,379 @@ Coefficients of $z_n$ are all positive
 
 \begin{lstlisting}
 
-    def solve(self):
-        """Solves the linear program
+def solveLinearProgram(c, A, b):
+    """solveLinearProgram
 
-        :returns: Solution to linear program
+    Solve (maximizes) the linear program
+    :c: Coefficients for the optimization function
+    :A: Constraint Coefficient matrix
+    :b: Constraint boundaries
+    :returns: xb, zn, assignment, and solution to the linear program
+
+    """
+    if type(c) is not np.matrix:
+        c = np.matrix(c)
+
+    if type(A) is not np.matrix:
+        A = np.matrix(A)
+
+    if type(b) is not np.matrix:
+        b = np.matrix(b)
+
+    N = [i for i in range(A.shape[1])]
+    B = [i + len(N) for i in range(A.shape[0])]
+
+    zn = -c
+    xb = b
+
+    originalBasic = B[:]
+    originalNonBasic = N[:]
+    A = np.append(A, np.identity(len(B)), 1)
+
+    def getBasicMatrix():
+        """ Generate the basic matrix of the dictionary
+
+        :returns: The basic matrix
+        """
+        return np.concatenate([A[:, i] for i in B], 1)
+
+    def getNonBasicMatrix():
+        """Generates the non-basic matrix
+
+        :returns: The nonbasic matrix
 
         """
+        return np.concatenate([A[:, i] for i in N], 1)
 
-        iteration = 0
-        while True:
-            # Step 1 / 2
-            print(r"\textbf{Iteration " + str(iteration + 1) + r": }" + "\n")
-
-            print(r"\begin{center}")
-            print(self.printLaTeXIndecies() + r"\\" + '\n')
-            print(self.printLaTeXBaseMatrices() + r"\\" + '\n')
-            print(self.printLaTeXVaribles() + r"\\" + '\n')
-            print(r"\end{center}")
-
-
-            print(r"\textit{Step 1:}")
-
-            firstPivot = self.minCoeff(self._zn)
-            if firstPivot[0] == -1:
-                print("Coefficients of $z_n$ are all positive")
-                return
-                # print("Done optimizing", list(zip(self._N, np.nditer((self._zn)))))
-
-            print("Negative Coefficient(s) in $z_n$")
-            enteringIndex, value = firstPivot
-            j = self._N[enteringIndex]
-
-            print(r"\\\textit{Step 2:}\\")
-            print(r"\begin{center}")
-            print("$j$ = {}".format(j + 1))
-            print(r"\end{center}")
-
-            # Step 3
-
-            elementary = np.matrix(basisVector(self.getNonBasicMatrix().shape[1],
-                enteringIndex)).transpose()
-            binv = np.linalg.inv(self.getBasicMatrix())
-            deltaxb = binv * self.getNonBasicMatrix() * elementary
-
-            print(r"\textit{Step 3:}\\")
-            print(r"\begin{center}$\Delta x_B$ = $" + self.latexPrint(binv) +
-                    self.latexPrint(self.getNonBasicMatrix()) +
-                    self.latexPrint(elementary) + " = " +
-                    self.latexPrint(deltaxb) + r"$\end{center}")
-
-
-            # Step 4
-            numerators = [num.item(0) for num in np.nditer(deltaxb)]
-            denominators = [num.item(0) if num.item(0) is not 0 else None for num in np.nditer(self._xb)]
-
-            nums = [numerators[idx] / val for idx, val in enumerate(denominators) if val is not None]
-            vectorIndex, t = max(enumerate(nums), key=operator.itemgetter(1))
-            t = 1 / t
-
-            print(r"\textit{Step 4:}\\")
-            print(r"\begin{center}")
-            print("$t$ = {}".format(t))
-            print(r"\end{center}")
-
-
-            # Step 5
-            leavingIndex = self._B[vectorIndex]
-
-            print(r"\textit{Step 5:}\\")
-            print(r"\begin{center}")
-            print("$i$ = {}".format(leavingIndex + 1))
-            print(r"\end{center}")
-
-
-            # Step 6
-            elementary = np.matrix(basisVector(self.getNonBasicMatrix().shape[0],
-                vectorIndex)).transpose()
-            binvNT = (binv * self.getNonBasicMatrix()).transpose()
-            deltazn = -binvNT * elementary
-            print(r"\textit{Step 6:}\\")
-            print(r"\begin{center}$\Delta z_N = " + self.latexPrint(deltazn) +
-                    r"$\end{center}")
-
-            # Step 7
-            s = self._zn.item(enteringIndex) / deltazn.item(enteringIndex)
-            print(r"\textit{Step 7:}\\")
-            print(r"\begin{center}$s = " + str(s) + r"$\end{center}")
-
-            # Step 8
-
-            self._xb = self._xb - t * deltaxb
-            self._zn = self._zn.transpose() - s * deltazn
-
-
-            originalXb = self.latexPrint(self._xb)
-            originalzn = self.latexPrint(self._zn)
-
-            leavingIndexIndex = self._B.index(leavingIndex)
-            enteringIndexIndex = self._N.index(j)
-
-
-            self._B[leavingIndexIndex] = j
-            self._N[enteringIndexIndex] = leavingIndex
+    while True:
+        # Step 1/2
+        firstPivot = minCoeff(zn)
 
 
 
-            self._xb.put(leavingIndexIndex, t)
-            self._zn.put(enteringIndexIndex, s)
-            self._zn = self._zn.transpose()
+        if firstPivot[0] == -1:
+            var_assign = {idx : xb[B.index(n)].tolist()[0][0] if n in B else zn.transpose()[N.index(n)].tolist()[0][0] for idx, n in enumerate(originalNonBasic)}
+            slack = {idx + len(originalNonBasic): zn.transpose()[N.index(n)].tolist()[0][0] if n in N else xb[B.index(n)].tolist()[0][0]  for idx, n in enumerate(originalBasic)}
+            solution = sum([var_assign[index] * x for index, x in enumerate(np.nditer(c))])
 
-            print(r"\textit{Step 8:}\\")
-            print(r"\begin{center}")
+            return {'xb': list(zip(B, [x for r in xb.tolist() for x in r])),
+                    'zn': list(zip(N, [x for r in zn.tolist() for x in r])),
+                    'originalVars': originalNonBasic,
+                    'assignment': var_assign,
+                    'slack': slack,
+                    'solution': solution
+                    }
 
-            print(
-                    printSingleLine([
-                        "$x_{}^* = {}$".format(leavingIndexIndex + 1, t),
-                        "$x_B^* = " + originalXb + "$"
-                        ]))
-            print(r"\\")
-            print(
-                    printSingleLine([
-                        "$z_{}^* = {}$".format(enteringIndexIndex + 1, s),
-                        "$z_N^* = " + originalzn + "$"
-                        ]))
+        enteringIndex, value = firstPivot
+        j = N[enteringIndex]
 
-            print(r"\end{center}")
+        # Step 3
+        elementary = np.matrix(basisVector(getNonBasicMatrix().shape[1],
+            enteringIndex)).transpose()
+        binv = np.linalg.inv(getBasicMatrix())
+        deltaxb = binv * getNonBasicMatrix() * elementary
 
-            iteration += 1
+        # Step 4
+        numerators = [num.item(0) for num in np.nditer(deltaxb)]
+        denominators = [num.item(0) if num.item(0) is not 0 else None for num in np.nditer(xb)]
+
+        nums = [numerators[idx] / val for idx, val in enumerate(denominators) if val is not None]
+        vectorIndex, t = max(enumerate(nums), key=operator.itemgetter(1))
+        t = 1 / t
+
+        # Step 5
+        leavingIndex = B[vectorIndex]
+
+        # Step 6
+        elementary = np.matrix(basisVector(getNonBasicMatrix().shape[0],
+            vectorIndex)).transpose()
+        binvNT = (binv * getNonBasicMatrix()).transpose()
+        deltazn = -binvNT * elementary
+
+        # Step 7
+        s = zn.item(enteringIndex) / deltazn.item(enteringIndex)
+
+        # Step 8
+        xb = xb - t * deltaxb
+        zn = zn.transpose() - s * deltazn
+
+        leavingIndexIndex = B.index(leavingIndex)
+        enteringIndexIndex = N.index(j)
+
+        B[leavingIndexIndex] = j
+        N[enteringIndexIndex] = leavingIndex
+
+        xb.put(leavingIndexIndex, t)
+        zn.put(enteringIndexIndex, s)
+        zn = zn.transpose()
+
 
 \end{lstlisting}
+
+\section{Degeneracies}
+
+To work with the degenerate case of having a negative in the constraint boundaries,
+we simply run the solver on the dual of the problem by taking the negative transpose
+of the $A$ matrix, $c$ vector, and $b$ vector. Then feed that into the solver with
+the original $c$ vector being fed in as the $b$ vector and the original $b$ vector
+being fed in as the $c$ vector. The assignments in the slack output are the
+assignments to the non-slack variables of the original problem.
+
+\section{LaTeX Generation}
+
+The code is updated to have a "debug" flag provided as a parameter enabling the
+output of \LaTeX arrays.
+
+The Simplex function is as follows
+
+\begin{lstlisting}
+def solveLinearProgram(c, A, b, debug=False):
+    """solveLinearProgram
+
+    Solve (maximizes) the linear program
+    :c: Coefficients for the optimization function
+    :A: Constraint Coefficient matrix
+    :b: Constraint boundaries
+    :returns: xb, zn, assignment, and solution to the linear program
+
+    """
+    if type(c) is not np.matrix:
+        c = np.matrix(c)
+
+    if type(A) is not np.matrix:
+        A = np.matrix(A)
+
+    if type(b) is not np.matrix:
+        b = np.matrix(b)
+
+    N = [i for i in range(A.shape[1])]
+    B = [i + len(N) for i in range(A.shape[0])]
+
+    zn = -c
+    xb = b
+
+    originalBasic = B[:]
+    originalNonBasic = N[:]
+    A = np.append(A, np.identity(len(B)), 1)
+
+    def getBasicMatrix():
+        """ Generate the basic matrix of the dictionary
+
+        :returns: The basic matrix
+        """
+        return np.concatenate([A[:, i] for i in B], 1)
+
+    def getNonBasicMatrix():
+        """Generates the non-basic matrix
+
+        :returns: The nonbasic matrix
+
+        """
+        return np.concatenate([A[:, i] for i in N], 1)
+
+    if debug:
+        iterations = 1
+    while True:
+
+        if debug:
+            # Print basic info
+            print(r"\textbf{Iteration " + str(iterations) + r": }" + "\n")
+            BIndex = r"$\mathcal{B} = " + \
+                    r"\left\{\begin{array}{" + "c" * len(B) + r"}" +\
+                    " & ".join([str(x + 1) for x in B]) + \
+                    r"\end{array}\right\}$"
+            NIndex = r"$\mathcal{N} = " + \
+                    r"\left\{\begin{array}{" + "c" * len(N) + r"}" +\
+                    " & ".join([str(x + 1) for x in N]) + \
+                    r"\end{array}\right\}$"
+            print(LaTeX.LaTeXCenter([
+                LaTeX.LaTeXSingleLine([BIndex, NIndex]), # The indices
+                LaTeX.LaTeXSingleLine([
+                    "$N = " + LaTeX.LaTeXMatrixToArray(getBasicMatrix()) + "$",
+                    "$B = " + LaTeX.LaTeXMatrixToArray(getNonBasicMatrix()) + "$"
+                    ]),  # The matrices
+                LaTeX.LaTeXSingleLine([ "$x_B^* = " + LaTeX.LaTeXMatrixToArray(xb) + "$",
+                    "$z_n^* = " + LaTeX.LaTeXMatrixToArray(zn.transpose()) + "$"
+                    ]) # xb* and zn* vectors
+                ]))
+
+        if debug:
+            print(r"\textit{Step 1:}")
+
+        # Step 1/2
+        firstPivot = minCoeff(zn)
+        if firstPivot[0] == -1:
+            var_assign = {idx : xb[B.index(n)].tolist()[0][0] if n in B else zn[N.index(n)].tolist()[0][0] for idx, n in enumerate(originalNonBasic)}
+            solution = sum([var_assign[index] * x for index, x in enumerate(np.nditer(c))])
+
+            if debug:
+                print("$z_n$ does not contain any negative values. Solution: {}".format(solution))
+
+            return {'xb': list(zip(B, [x for r in xb.tolist() for x in r])),
+                    'zn': list(zip(N, [x for r in zn.tolist() for x in r])),
+                    'originalVars': originalNonBasic,
+                    'assignment': var_assign,
+                    'solution': solution
+                    }
+
+        
+
+        enteringIndex, value = firstPivot
+        j = N[enteringIndex]
+
+        if debug:
+            print("$z_n$ contains negative values. Continue optimizing.\n")
+            print(r"\textit{Step 2:}\\")
+            print(LaTeX.LaTeXCenter(['$j = {}$'.format(j + 1)]))
+
+        # Step 3
+        elementary = np.matrix(basisVector(getNonBasicMatrix().shape[1],
+            enteringIndex)).transpose()
+        binv = np.linalg.inv(getBasicMatrix())
+        deltaxb = binv * getNonBasicMatrix() * elementary
+
+        if debug:
+            print(r"\textit{Step 3:}\\")
+            print("$$\Delta x_b = {} {} = {}$$".format(
+                LaTeX.LaTeXMatrixToArray(binv),
+                LaTeX.LaTeXMatrixToArray(elementary),
+                LaTeX.LaTeXMatrixToArray(deltaxb)))
+
+        # Step 4
+        numerators = [num.item(0) for num in np.nditer(deltaxb)]
+        denominators = [num.item(0) if num.item(0) is not 0 else None for num in np.nditer(xb)]
+
+        nums = [numerators[idx] / val for idx, val in enumerate(denominators) if val is not None]
+        vectorIndex, t = max(enumerate(nums), key=operator.itemgetter(1))
+        t = 1 / t
+
+        if debug:
+            print(r"\textit{Step 4:}\\")
+            print("$$t = {}$$".format(t))
+
+        # Step 5
+        leavingIndex = B[vectorIndex]
+
+        if debug:
+            print(r"\textit{Step 5:}\\")
+            print("$$i = {}$$".format(leavingIndex + 1))
+
+        # Step 6
+        elementary = np.matrix(basisVector(getNonBasicMatrix().shape[0],
+            vectorIndex)).transpose()
+        binvNT = (binv * getNonBasicMatrix()).transpose()
+        deltazn = -binvNT * elementary
+
+        if debug:
+            print(r"\textit{Step 6:}\\")
+            print("$$\Delta z_n = {} {} = {}$$".format(
+                LaTeX.LaTeXMatrixToArray(binvNT),
+                LaTeX.LaTeXMatrixToArray(elementary),
+                LaTeX.LaTeXMatrixToArray(deltazn)))
+
+        # Step 7
+        s = zn.item(enteringIndex) / deltazn.item(enteringIndex)
+
+        if debug:
+            print(r"\textit{Step 7:}\\")
+            print("$$s = {}$$".format(s))
+
+        # Step 8
+        xb = xb - t * deltaxb
+        zn = zn.transpose() - s * deltazn
+
+        if debug:
+            oldXB = LaTeX.LaTeXMatrixToArray(xb)
+            oldZN = LaTeX.LaTeXMatrixToArray(zn)
+
+        leavingIndexIndex = B.index(leavingIndex)
+        enteringIndexIndex = N.index(j)
+
+        B[leavingIndexIndex] = j
+        N[enteringIndexIndex] = leavingIndex
+
+        xb.put(leavingIndexIndex, t)
+        zn.put(enteringIndexIndex, s)
+
+        if debug:
+            print(r"\textit{Step 8:}\\")
+
+            print(LaTeX.LaTeXCenter([
+                LaTeX.LaTeXSingleLine([
+                    "$x_{}^* = {}$".format(leavingIndex + 1, t),
+                    "$x_B^* = " + oldXB + "$"
+                    ]),
+                LaTeX.LaTeXSingleLine([
+                    "$z_{}^* = {}$".format(enteringIndexIndex + 1, s),
+                    "$z_N^* = " + oldZN + "$"
+                    ])
+                ]))
+            iterations += 1
+
+        zn = zn.transpose()
+\end{lstlisting}
+
+We include an additional library of \LaTeX generators that enable us to quickly
+create multiple items on a single line (using a tabular environment) and center
+using the center environment. Furthermore, it is able to generate matrices using
+array environments in the math mode.
+
+The code in the library is as follows
+
+\begin{lstlisting}
+#
+# Utilities to help when working with LaTeX in Python
+# Evan Wilde
+#
+
+import numpy as np
+
+def LaTeXMatrixToArray(matrix):
+    """Prints the matrix in LaTeX form
+
+    :matrix: numpy matrix
+    :returns: String of the matrix
+
+    """
+    dims = matrix.shape
+    # print(dims)  # dims[0]: height, dims[1]: width
+    opening = r"\left[\begin{array}{" + "c" * dims[1] + r"}"
+    closing = r"\end{array}\right]"
+    string = ""
+    for idx, x in enumerate(np.nditer(matrix)):
+        string += str(float(x))
+        if idx % dims[1] == dims[1] - 1:
+            string += r"\\ "
+        else:
+            string += " & "
+    return opening + string + closing
+
+def LaTeXSingleLine(lst):
+    """Puts strings from list into an nx1 tabular
+
+    :lst: The list of strings to be put into the tabular
+    :returns: stirng of tabular environment
+    """
+    start = r"\begin{tabular}{" + "c" * len(lst) + r"}"
+    inner = " & ".join(lst)
+    end = r"\end{tabular}"
+    return start + inner + end
+
+def LaTeXCenter(lst):
+    """Prints contents of list in center environment
+
+    Each element of the list is put on a separate line (should be LaTeX
+    formatted strings)
+    :returns: string with stuff in the center
+    """
+    start = r"\begin{center}" + '\n'
+    inner = '    ' + r"\\ ".join(lst) + r"\\"
+    end   = '\n' + r"\end{center}" + '\n'
+    return start + inner + end
+\end{lstlisting}
+
+\section{Criss-Cross}
+
+I have no idea...
 
 \end{document}
