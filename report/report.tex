@@ -1,0 +1,118 @@
+\documentclass{article}
+
+\usepackage{amssymb}
+\usepackage{amsmath}
+
+\usepackage{listings}
+
+\usepackage{color}
+\usepackage{xcolor}
+\usepackage{graphicx}
+\usepackage{fancyvrb}
+\usepackage{multicol}
+
+\usepackage{hyperref}
+
+\usepackage{csvsimple}
+
+
+\author{Evan Wilde}
+\date{2016-11-14}
+\title{Linear Programming Project}
+\hypersetup{
+  pdfauthor={Evan Wilde},
+  pdftitle={Linear Programming Project},
+}
+
+\input{colors}
+
+\lstset{frame=tb,
+  language=python,
+  aboveskip=3mm,
+  belowskip=3mm,
+  showstringspaces=false,
+  columns=flexible,
+  basicstyle={\small\ttfamily},
+  numbers=none,
+  numberstyle=\tiny\color{gray},
+  keywordstyle=\color{chartblue},
+  commentstyle=\color{chartred},
+  stringstyle=\color{chartgreen},
+  breaklines=true,
+  breakatwhitespace=true,
+  tabsize=3
+}
+
+\begin{document}
+\maketitle
+
+\section{Basic Pedagogical Implementation}
+
+\subsection{Input Files}
+
+The program requires 3 files containing the A constraint coefficient matrix, the
+boundary constraints (b vector), and the coefficients to the optimization function
+(c vector).
+
+The files representing each must be in the following order:
+\begin{enumerate}
+  \item A matrix
+  \item b vector
+  \item c vector
+\end{enumerate}
+
+The files containing the b and c vector do not require that the vector be written as
+a column or row vector, and will allow the user to write them either way.
+
+These two will behave equivalently:
+
+\begin{multicols}{2}
+\begin{minipage}[t]{0.5\textwidth}
+\begin{Verbatim}
+  1,2,3
+\end{Verbatim}
+\end{minipage}
+
+\begin{minipage}[t]{0.5\textwidth}
+  \begin{Verbatim}
+  1
+  2
+  3
+\end{Verbatim}
+\end{minipage}
+\end{multicols}
+
+\textbf{Example of input files}
+
+\begin{tabular}{c c c}
+\begin{minipage}[t]{0.333\textwidth}
+\textit{A.csv}
+\VerbatimInput[frame=single]{examples/A.csv}
+\end{minipage}
+
+&
+
+\begin{minipage}[t]{0.333\textwidth}
+\textit{b.csv}
+\VerbatimInput[frame=single]{examples/b.csv}
+\end{minipage}
+
+&
+
+\begin{minipage}[t]{0.333\textwidth}
+\textit{c.csv}
+\VerbatimInput[frame=single]{examples/c.csv}
+\end{minipage}
+\end{tabular}
+
+\subsection{Output}
+
+%%TODO: Get the output
+
+\subsection{Code}
+
+\begin{lstlisting}
+
+\end{lstlisting}
+
+\end{document}
