@@ -95,7 +95,11 @@ def minCoeff(zCoeff):
 def solveLinearProgram(c, A, b, debug=False):
     """solveLinearProgram
 
-    Solve the linear program
+    Solve (maximizes) the linear program
+    :c: Coefficients for the optimization function
+    :A: Constraint Coefficient matrix
+    :b: Constraint boundaries
+    :returns: xb, zn, assignment, and solution to the linear program
 
     """
     if type(c) is not np.matrix:
@@ -136,8 +140,15 @@ def solveLinearProgram(c, A, b, debug=False):
         # Step 1/2
         firstPivot = minCoeff(zn)
         if firstPivot[0] == -1:
+            var_assign = {idx : xb[B.index(n)].tolist()[0][0] if n in B else zn[N.index(n)].tolist()[0][0] for idx, n in enumerate(originalNonBasic)}
+            solution = sum([var_assign[index] * x for index, x in enumerate(np.nditer(c))])
             return {'xb': list(zip(B, [x for r in xb.tolist() for x in r])),
-                    'zn': list(zip(N, [x for r in zn.tolist() for x in r]))}
+                    'zn': list(zip(N, [x for r in zn.tolist() for x in r])),
+                    'originalVars': originalNonBasic,
+                    'assignment': var_assign,
+                    'solution': solution
+                    }
+
         enteringIndex, value = firstPivot
         j = N[enteringIndex]
 
@@ -180,7 +191,6 @@ def solveLinearProgram(c, A, b, debug=False):
         xb.put(leavingIndexIndex, t)
         zn.put(enteringIndexIndex, s)
         zn = zn.transpose()
-
 
 
 def main():
